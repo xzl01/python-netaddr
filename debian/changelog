@@ -1,5 +1,300 @@
-template-repository (1.0-1) unstable; urgency=medium
+python-netaddr (0.8.0-3) UNRELEASED; urgency=medium
 
-  * Initial release
+  * Update lintian override info format in
+    d/python-netaddr-docs.lintian-overrides on line 1.
+  * Bump debhelper from deprecated 9 to 13.
+  * Update renamed lintian tag names in lintian overrides.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Name,
+    Repository-Browse.
+  * Remove constraints unnecessary since buster (oldstable):
+    + Build-Depends: Drop versioned constraint on python3-all.
 
- -- Tsic404 <liuheng@deepin.org>  Sat, 28 Jan 2023 13:46:49 +0800
+ -- Debian Janitor <janitor@jelmer.uk>  Sat, 19 Nov 2022 08:01:02 -0000
+
+python-netaddr (0.8.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Upload to unstable.
+  * Ran wrap-and-sort -bastk.
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 16 Aug 2021 13:20:18 +0200
+
+python-netaddr (0.8.0-1) experimental; urgency=medium
+
+  * Team upload.
+  * New upstream release. (Closes: #986021)
+  * Removed patches applied upstream:
+    - 2ab73f10be7069c9412e853d2d0caf29bd624012.patch
+    - PR200.patch
+
+ -- Thomas Goirand <zigo@debian.org>  Sun, 28 Mar 2021 00:27:25 +0100
+
+python-netaddr (0.7.19-5) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Sandro Tosi ]
+  * Use the new Debian Python Team contact name and address
+
+  [ Vincent Bernat ]
+  * d/rules: do not build documentation (Closes: #984939)
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 10 Mar 2021 19:35:08 +0100
+
+python-netaddr (0.7.19-4) unstable; urgency=medium
+
+  * Drop python2 support; Closes: #937942
+  * debian/patches/PR200.patch
+    - address SyntaxWarning revealed by python3.8; Closes: #950787
+
+ -- Sandro Tosi <morph@debian.org>  Fri, 13 Mar 2020 13:40:36 -0400
+
+python-netaddr (0.7.19-3) unstable; urgency=medium
+
+  * d/control: build-depends on python-all. Closes: #950362.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 31 Jan 2020 23:42:29 +0100
+
+python-netaddr (0.7.19-2) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Set Vcs-* to salsa.debian.org
+  * Use 'python3 -m sphinx' instead of sphinx-build for building docs
+  * Use debhelper-compat instead of debian/compat.
+
+  [ Vincent Bernat ]
+  * d/control: BD on dh-python. Closes: #950071.
+  * d/patches: add patch to fix tests with Python 3.8.
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 29 Jan 2020 15:37:58 +0100
+
+python-netaddr (0.7.19-1) unstable; urgency=medium
+
+  * New upstream version.
+  * d/control: bump Standards-Version.
+  * d/control: build-depends on python3-sphinx.
+  * d/rules: use /var/lib/ieee-data as target for OUI/IAB symlinks.
+    Closes: #879615.
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 23 Oct 2017 16:05:15 +0200
+
+python-netaddr (0.7.18-2) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * Fixed VCS URL (https)
+
+  [ Vincent Bernat ]
+  * Bump Standards-Version to 3.9.8.
+  * Replace manual use of localedef by localehelper package. Should also
+    closes: #814696.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 10 Sep 2016 14:07:34 +0200
+
+python-netaddr (0.7.18-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 14 Sep 2015 22:55:00 +0200
+
+python-netaddr (0.7.17-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+  * d/control:
+    - Build-Depend on python3-all to pick up Python 3.5.
+    - Build-Depend on locales so that utf-8 locale can be created for the
+      test suite.
+  * d/rules:
+    - Invoke py.test directly instead of through the runtests.py script,
+      since the latter embeds an old and Python 3.5 incompatible version
+      of py.test.
+    - Ensure UTF-8 locale.
+  * d/watch: Use pypi.debian.net redirector.
+  * wrap-and-sort.
+
+ -- Barry Warsaw <barry@debian.org>  Thu, 03 Sep 2015 17:17:06 -0400
+
+python-netaddr (0.7.15-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Silent Lintian about *.idx files. Not available in ieee-data package.
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 10 Aug 2015 11:30:13 +0200
+
+python-netaddr (0.7.14-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 3.9.6.
+  * Convert to dh/pybuild.
+  * Update debian/watch.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 29 May 2015 09:08:34 +0200
+
+python-netaddr (0.7.12-2) unstable; urgency=medium
+
+  * Fix location of IEEE data files (again!). Closes: #765123.
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 13 Oct 2014 21:01:31 +0200
+
+python-netaddr (0.7.12-1) unstable; urgency=medium
+
+  * New upstream release
+  * Fix debian/watch.
+  * Fix location of IEEE data files. Closes: #756520.
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 31 Jul 2014 08:57:57 +0200
+
+python-netaddr (0.7.10-5) unstable; urgency=medium
+
+  * Fix FTBFS due to deprecation of /usr/share/pyshared directory.
+    Closes: #750311.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 06 Jun 2014 22:42:15 +0200
+
+python-netaddr (0.7.10-4) unstable; urgency=low
+
+  * Ensure that we get the right she-bang for /usr/bin/netaddr.
+    Closes: #739840.
+
+ -- Vincent Bernat <bernat@debian.org>  Wed, 26 Feb 2014 20:44:56 +0100
+
+python-netaddr (0.7.10-3) unstable; urgency=low
+
+  * Fix typo in dependency to ieee-data. Closes: #739765.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 22 Feb 2014 13:05:42 +0100
+
+python-netaddr (0.7.10-2) unstable; urgency=low
+
+  * Depends on ieee-data instead of shipping oui.txt and iab.txt.
+    Closes: #739197. Closes: #739198.
+  * Bump Standards-Version to 3.9.5.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 21 Feb 2014 00:01:42 +0100
+
+python-netaddr (0.7.10-1) unstable; urgency=low
+
+  [ Jakub Wilk ]
+  * Use canonical URIs for Vcs-* fields.
+
+  [ Vincent Bernat ]
+  * New upstream release.
+  * Bump Standards-Version to 3.9.4.
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 04 Aug 2013 15:45:54 +0200
+
+python-netaddr (0.7.7-1) unstable; urgency=low
+
+  * New upstream release.
+  * Generate documentation with Sphinx instead of epydoc. Also, ship the
+    documentation in a separate package.
+  * Add Python 3 package. Update compatibility level to 8.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 23 Jun 2012 16:21:19 +0200
+
+python-netaddr (0.7.6-2) unstable; urgency=low
+
+  * Clean generated documentation. Closes: #671344.
+  * Bump Standards-Version.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 12 May 2012 11:09:42 +0200
+
+python-netaddr (0.7.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 15 Jan 2012 13:46:06 +0100
+
+python-netaddr (0.7.5-4) unstable; urgency=low
+
+  * Tests have moved. Update debian/runtests.py accordingly.
+    Patch from Ubuntu. Closes: #633653.
+  * Support for ipython 0.11. Thanks to Julian Taylor.
+    Closes: #636476.
+
+ -- Vincent Bernat <bernat@debian.org>  Sun, 07 Aug 2011 09:05:16 +0200
+
+python-netaddr (0.7.5-3) unstable; urgency=low
+
+  * Fix debian/watch. Closes: #614358.
+  * Add a patch to allow unpickling. Closes: #631360.
+      + Switch to 3.0 quilt format.
+  * Bump Standards-Version.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 09 Jul 2011 16:34:08 +0200
+
+python-netaddr (0.7.5-2) unstable; urgency=low
+
+  * Team upload.
+  * Rebuild to add Python 2.7 support
+
+ -- Piotr Ożarowski <piotr@debian.org>  Sun, 08 May 2011 16:45:44 +0200
+
+python-netaddr (0.7.5-1) unstable; urgency=low
+
+  * New upstream release.
+     + Fix an inability to load from PowerDNS coprocess. Closes: #614335.
+  * Update Homepage link in debian/control.
+  * Bump Standards-Version.
+  * Switch to dh_python2.
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 21 Feb 2011 08:55:55 +0100
+
+python-netaddr (0.7.4-1) unstable; urgency=low
+
+  [ Vincent Bernat ]
+  * New upstream release
+  * Provide a doc-base file
+  * Add a manual page for netaddr and add a Suggests for ipython to
+    debian/control
+
+  [ Piotr Ożarowski ]
+  * CDBS uses site-packages even for python2.6, adjust runtests.py
+    accordingly
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 31 Dec 2009 12:29:06 +0100
+
+python-netaddr (0.7.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Bump Standards-Version.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 17 Oct 2009 13:16:12 +0200
+
+python-netaddr (0.6.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 11 Jun 2009 21:29:34 +0200
+
+python-netaddr (0.6-2) unstable; urgency=low
+
+  * Run unittests before calling python-support. Closes: #517064.
+  * Bump Standards-Version. No changes required.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 21 Mar 2009 09:27:48 +0100
+
+python-netaddr (0.6-1) unstable; urgency=low
+
+  [ Vincent Bernat ]
+  * New upstream release
+
+  [ Sandro Tosi ]
+  * debian/control
+    - switch Vcs-Browser field to viewsvn
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 22 Jan 2009 21:58:05 +0100
+
+python-netaddr (0.5.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 27 Oct 2008 18:21:55 +0100
+
+python-netaddr (0.4-1) unstable; urgency=low
+
+  * Initial release (Closes: #496819)
+
+ -- Vincent Bernat <bernat@debian.org>  Thu, 28 Aug 2008 09:29:38 +0200
