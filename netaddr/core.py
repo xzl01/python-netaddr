@@ -22,6 +22,9 @@ Z = ZEROFILL = 2
 #:  Remove any host bits found to the right of an applied CIDR prefix.
 N = NOHOST = 4
 
+#: Use legacy ``inet_aton()`` semantics when parsing IPv4.
+INET_ATON = 8
+
 #-----------------------------------------------------------------------------
 #   Custom exceptions.
 #-----------------------------------------------------------------------------
@@ -52,6 +55,7 @@ try:
     a = 42
     a.bit_length()
     # No exception, must be Python 2.7 or 3.1+ -> can use bit_length()
+    del a
     def num_bits(int_val):
         """
         :param int_val: an unsigned integer.
@@ -142,7 +146,7 @@ class Publisher(object):
         :param subscriber: a new object that implements the Subscriber object
             interface.
         """
-        if hasattr(subscriber, 'update') and _callable(eval('subscriber.update')):
+        if hasattr(subscriber, 'update') and _callable(subscriber.update):
             if subscriber not in self.subscribers:
                 self.subscribers.append(subscriber)
         else:

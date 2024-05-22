@@ -22,11 +22,11 @@ clean:
 	find . -name '*.pyc' -exec rm -f {} ';'
 	find . -name '*.pyo' -exec rm -f {} ';'
 
-dist: clean doc
+dist: clean
 	@echo 'building netaddr release'
 	python setup.py develop
 	@echo 'building source distributions'
-	python setup.py sdist --formats=gztar,zip
+	python setup.py sdist
 	@echo 'building wheel package'
 	pip install --upgrade pip
 	pip install wheel
@@ -35,21 +35,22 @@ dist: clean doc
 doc:
 	@echo 'building documentation'
 	pip install sphinx
+	pip install -r docs/requirements.txt
 	python setup.py develop
 	cd docs/ && $(MAKE) -f Makefile clean html
 	cd docs/build/html && zip -r ../netaddr.zip *
 
 download:
 	@echo 'downloading latest IEEE data'
-	cd netaddr/eui/ && wget http://standards-oui.ieee.org/oui/oui.txt
-	cd netaddr/eui/ && wget http://standards-oui.ieee.org/iab/iab.txt
+	cd netaddr/eui/ && wget http://standards-oui.ieee.org/oui/oui.txt -O oui.txt
+	cd netaddr/eui/ && wget http://standards-oui.ieee.org/iab/iab.txt -O iab.txt
 	@echo 'rebuilding IEEE data file indices'
 	python netaddr/eui/ieee.py
 	@echo 'downloading latest IANA data'
-	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv4-address-space/ipv4-address-space.xml
-	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv6-address-space/ipv6-address-space.xml
-	cd netaddr/ip/ && wget https://www.iana.org/assignments/multicast-addresses/multicast-addresses.xml
-	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv6-unicast-address-assignments/ipv6-unicast-address-assignments.xml
+	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv4-address-space/ipv4-address-space.xml -O ipv4-address-space.xml
+	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv6-address-space/ipv6-address-space.xml -O ipv6-address-space.xml
+	cd netaddr/ip/ && wget https://www.iana.org/assignments/multicast-addresses/multicast-addresses.xml -O multicast-addresses.xml
+	cd netaddr/ip/ && wget https://www.iana.org/assignments/ipv6-unicast-address-assignments/ipv6-unicast-address-assignments.xml -O ipv6-unicast-address-assignments.xml
 
 register:
 	@echo 'releasing netaddr'
@@ -70,8 +71,6 @@ test: clean
 	@echo 'running test suite'
 	pip install -r requirements.txt
 	py.test netaddr/tests
-	@echo 'running doc tests (tutorials)'
-	python tutorials/run_doctests.py
 
 test_with_junitxml: clean
 	@echo 'running test suite with JUnit XML output'

@@ -8,7 +8,7 @@
 import sys as _sys
 
 from netaddr.core import AddrFormatError, AddrConversionError, num_bits, \
-    DictDotLookup, NOHOST, N, INET_PTON, P, ZEROFILL, Z
+    DictDotLookup, NOHOST, N, INET_ATON, INET_PTON, P, ZEROFILL, Z
 
 from netaddr.strategy import ipv4 as _ipv4, ipv6 as _ipv6
 
@@ -55,7 +55,7 @@ class BaseIP(object):
 
     def __hash__(self):
         """
-        :return: A hash value uniquely indentifying this IP object.
+        :return: A hash value uniquely identifying this IP object.
         """
         return hash(self.key())
 
@@ -147,24 +147,49 @@ class BaseIP(object):
         :return: ``True`` if this IP is loopback address (not for network
             transmission), ``False`` otherwise.
             References: RFC 3330 and 4291.
+
+        .. note:: |ipv4_in_ipv6_handling|
         """
         if self._module.version == 4:
             return self in IPV4_LOOPBACK
         elif self._module.version == 6:
-            return self == IPV6_LOOPBACK
+            return self in IPV6_LOOPBACK
 
     def is_private(self):
         """
         :return: ``True`` if this IP is for internal/private use only
             (i.e. non-public), ``False`` otherwise. Reference: RFCs 1918,
             3330, 4193, 3879 and 2365.
+
+        .. note:: |ipv4_in_ipv6_handling|
+
+        .. deprecated:: 0.10.0
+            The ``is_private`` method has been mixing several different address types together
+            which could lead to unexpected results. There are more precise
+            replacements for subset of the addresses handled by ``is_private`` today:
+
+            * :meth:`is_link_local`
+            * :meth:`is_ipv4_private_use`
+            * :meth:`is_ipv6_unique_local`
+
+            There is also the :meth:`is_global` method that lets you handle all globally
+            reachable (or not) addresses.
+
+            The following address blocks currently handled by ``is_private`` have no
+            convenience methods and you'll have to handle them manually or request a method
+            addition:
+
+            * ``100.64.0.0/10`` – Shared Address Space
+            * ``192.0.0.0/24`` – IETF Protocol Assignments
+            * ``198.18.0.0/15`` – Benchmarking
+            * ``239.0.0.0``-``239.255.255.255``
         """
         if self._module.version == 4:
-            for cidr in IPV4_PRIVATE:
+            for cidr in IPV4_PRIVATEISH:
                 if self in cidr:
                     return True
         elif self._module.version == 6:
-            for cidr in IPV6_PRIVATE:
+            for cidr in IPV6_PRIVATEISH:
                 if self in cidr:
                     return True
 
@@ -177,6 +202,8 @@ class BaseIP(object):
         """
         :return: ``True`` if this IP is link-local address ``False`` otherwise.
             Reference: RFCs 3927 and 4291.
+
+        .. note:: |ipv4_in_ipv6_handling|
         """
         if self._module.version == 4:
             return self in IPV4_LINK_LOCAL
@@ -187,6 +214,8 @@ class BaseIP(object):
         """
         :return: ``True`` if this IP is in IANA reserved range, ``False``
             otherwise. Reference: RFCs 3330 and 3171.
+
+        .. note:: |ipv4_in_ipv6_handling|
         """
         if self._module.version == 4:
             for cidr in IPV4_RESERVED:
@@ -250,12 +279,52 @@ class IPAddress(BaseIP):
             equivalent integer value.
 
         :param flags: (optional) decides which rules are applied to the
-            interpretation of the addr value. Supported constants are
-            INET_PTON and ZEROFILL. See the netaddr.core docs for further
-            details.
+            interpretation of the addr value if passed as a string.
 
+            Matters only in IPv4 context.
+
+            Allowed flag values:
+
+            * The default (``0``) or :data:`INET_ATON`. Follows `inet_aton semantics
+              <https://www.netmeister.org/blog/inet_aton.html>`_ and allows all kinds of
+              weird-looking addresses to be parsed. For example:
+
+              >>> IPAddress('1')
+              IPAddress('0.0.0.1')
+              >>> IPAddress('1.0xf')
+              IPAddress('1.0.0.15')
+              >>> IPAddress('010.020.030.040')
+              IPAddress('8.16.24.32')
+
+            * ``INET_ATON | ZEROFILL`` or :data:`ZEROFILL` – like the default, except leading zeros are discarded:
+
+              >>> IPAddress('010', flags=INET_ATON | ZEROFILL)
+              IPAddress('0.0.0.10')
+
+            * :data:`INET_PTON` – requires four decimal octets:
+
+              >>> IPAddress('10.0.0.1', flags=INET_PTON)
+              IPAddress('10.0.0.1')
+
+              Leading zeros may be ignored or rejected, depending on the platform.
+
+            * ``INET_PTON | ZEROFILL`` – like :data:`INET_PTON`, except leading zeros are
+              discarded:
+
+              >>> IPAddress('010.020.030.040', flags=INET_PTON | ZEROFILL)
+              IPAddress('10.20.30.40')
+
+        .. versionchanged:: 0.10.0
+            The default IPv4 parsing mode is scheduled to become :data:`INET_PTON` in the next
+            major release.
         """
         super(IPAddress, self).__init__()
+
+        if flags & ~(INET_PTON | ZEROFILL | INET_ATON):
+            raise ValueError('Unrecognized IPAddress flags value: %s' % (flags,))
+
+        if flags & INET_ATON and flags & INET_PTON:
+            raise ValueError('INET_ATON and INET_PTON are mutually exclusive')
 
         if isinstance(addr, BaseIP):
             #   Copy constructor.
@@ -502,7 +571,7 @@ class IPAddress(BaseIP):
     def __bytes__(self):
         """ 
         :return: a bytes object equivalent to this IP address. In network
-        byte order, big-endian.
+            byte order, big-endian.
         """
         #   Python 3.x
         return self._value.to_bytes(self._module.width//8, 'big')
@@ -531,7 +600,7 @@ class IPAddress(BaseIP):
     @property
     def bin(self):
         """
-        The value of this IP adddress in standard Python binary
+        The value of this IP address in standard Python binary
         representational form (0bxxx). A back port of the format provided by
         the builtin bin() function found in Python 2.6.x and higher.
         """
@@ -597,7 +666,7 @@ class IPAddress(BaseIP):
         """
         Only relevant for IPv6 addresses. Has no effect for IPv4.
 
-        :param dialect: An ipv6_* dialect class.
+        :param dialect: One of the :ref:`ipv6_formatting_dialects`.
 
         :return: an alternate string representation for this IP address.
         """
@@ -667,6 +736,100 @@ class IPAddress(BaseIP):
     def __repr__(self):
         """:return: Python statement to create an equivalent object"""
         return "%s('%s')" % (self.__class__.__name__, self)
+
+    def to_canonical(self):
+        """
+        Converts the address to IPv4 if it is an IPv4-mapped IPv6 address (`RFC 4291
+        Section 2.5.5.2 <https://datatracker.ietf.org/doc/html/rfc4291.html#section-2.5.5.2>`_),
+        otherwise returns the address as-is.
+
+        >>> # IPv4-mapped IPv6
+        >>> IPAddress('::ffff:10.0.0.1').to_canonical()
+        IPAddress('10.0.0.1')
+        >>>
+        >>> # Everything else
+        >>> IPAddress('::1').to_canonical()
+        IPAddress('::1')
+        >>> IPAddress('10.0.0.1').to_canonical()
+        IPAddress('10.0.0.1')
+
+        .. versionadded:: 0.10.0
+        """
+        if not self.is_ipv4_mapped():
+            return self
+        return self.ipv4()
+
+    def is_global(self):
+        """
+        Returns ``True`` if this address is considered globally reachable, ``False`` otherwise.
+
+        An address is considered globally reachable if it's not a special-purpose address
+        or it's a special-purpose address listed as globally reachable in the relevant
+        registries:
+
+        * |iana_special_ipv4|
+        * |iana_special_ipv6|
+
+        Addresses for which the ``Globally Reachable`` value is ``N/A`` are not considered
+        globally reachable.
+
+        Address blocks with set termination date are not taken into consideration.
+
+        Whether or not an address can actually be reached in any local or global context will
+        depend on the network configuration and may differ from what this method returns.
+
+        Currently there can be addresses that are neither ``is_global()`` nor :meth:`is_private`.
+        There are also addresses that are both. All things being equal ``is_global()`` should
+        be considered more trustworthy.
+
+        Examples:
+
+        >>> IPAddress('1.1.1.1').is_global()
+        True
+        >>> IPAddress('::1').is_global()
+        False
+
+        .. note:: |ipv4_in_ipv6_handling|
+        """
+        if self._module.version == 4:
+            not_reachable = IPV4_NOT_GLOBALLY_REACHABLE
+            exceptions = IPV4_NOT_GLOBALLY_REACHABLE_EXCEPTIONS
+        else:
+            not_reachable = IPV6_NOT_GLOBALLY_REACHABLE
+            exceptions = IPV6_NOT_GLOBALLY_REACHABLE_EXCEPTIONS
+
+        return (
+            not any(self in net for net in not_reachable)
+            or any(self in net for net in exceptions)
+        )
+
+    def is_ipv4_private_use(self):
+        """
+        Returns ``True`` if this address is an IPv4 private-use address as defined in
+        :rfc:`1918`.
+
+        The private-use address blocks:
+
+        * ``10.0.0.0/8``
+        * ``172.16.0.0/12``
+        * ``192.168.0.0/16``
+
+        .. note:: |ipv4_in_ipv6_handling|
+
+        .. versionadded:: 0.10.0
+        """
+        return self._module.version == 4 and any(self in cidr for cidr in IPV4_PRIVATE_USE)
+
+    def is_ipv6_unique_local(self):
+        """
+        Returns ``True`` if this address is an IPv6 unique local address as defined in
+        :rfc:`4193` and listed in |iana_special_ipv6|.
+
+        The IPv6 unique local address block: ``fc00::/7``.
+
+        .. versionadded:: 0.10.0
+        """
+        return self._module.version == 6 and self in IPV6_UNIQUE_LOCAL
 
 
 class IPListMixin(object):
@@ -878,6 +1041,8 @@ class IPNetwork(BaseIP, IPListMixin):
         x.x.0.0/y   -> 192.168.0.0/16
         x.x.x.0/y   -> 192.168.0.0/24
 
+       .. deprecated:: 0.10.0
+
     .. warning::
 
         The next release (0.9.0) will contain a backwards incompatible change
@@ -903,16 +1068,25 @@ class IPNetwork(BaseIP, IPListMixin):
             provided. If False it uses the length of the IP address version.
             (default: False)
 
+            .. deprecated:: 0.10.0
+
         :param version: (optional) optimizes version detection if specified
             and distinguishes between IPv4 and IPv6 for addresses with an
             equivalent integer value.
 
         :param flags: (optional) decides which rules are applied to the
             interpretation of the addr value. Currently only supports the
-            NOHOST option. See the netaddr.core docs for further details.
+            :data:`NOHOST` option.
 
+            >>> IPNetwork('1.2.3.4/24')
+            IPNetwork('1.2.3.4/24')
+            >>> IPNetwork('1.2.3.4/24', flags=NOHOST)
+            IPNetwork('1.2.3.0/24')
         """
         super(IPNetwork, self).__init__()
+
+        if flags & ~NOHOST:
+            raise ValueError('Unrecognized IPAddress flags value: %s' % (flags,))
 
         value, prefixlen, module = None, None, None
 
@@ -1018,7 +1192,7 @@ class IPNetwork(BaseIP, IPListMixin):
             connected to handling of RFC 6164 IPv6 addresses (/127 and /128 subnets).
             ``broadcast`` will be ``None`` when dealing with those networks.
         """
-        if self._module.version == 4 and (self._module.width - self._prefixlen) <= 1:
+        if (self._module.width - self._prefixlen) <= 1:
             return None
         else:
             return IPAddress(self._value | self._hostmask_int, self._module.version)
@@ -1320,12 +1494,12 @@ class IPNetwork(BaseIP, IPListMixin):
         A generator that provides all the IP addresses that can be assigned
         to hosts within the range of this IP object's subnet.
 
-        - for IPv4, the network and broadcast addresses are always excluded. \
-          for subnets that contains less than 4 IP addresses /31 and /32 \
-          report in a manner per RFC 3021
+        - for IPv4, the network and broadcast addresses are excluded, excepted \
+          when using /31 or /32 subnets as per RFC 3021.
 
-        - for IPv6, only the unspecified address '::' or Subnet-Router anycast \
-          address (first address in the network) is excluded.
+        - for IPv6, only Subnet-Router anycast address (first address in the \
+          network) is excluded as per RFC 4291 section 2.6.1, excepted when using \
+          /127 or /128 subnets as per RFC 6164.
 
         .. warning::
 
@@ -1338,25 +1512,27 @@ class IPNetwork(BaseIP, IPListMixin):
         """
         it_hosts = iter([])
 
+        # Common logic, first IP is always reserved.
+        first_usable_address = self.first + 1
         if self._module.version == 4:
-            #   IPv4 logic.
-            if self.size >= 4:
-                it_hosts = iter_iprange(
-                        IPAddress(self.first + 1, self._module.version),
-                        IPAddress(self.last - 1, self._module.version))
-            else:
-                it_hosts = iter_iprange(
-                        IPAddress(self.first, self._module.version),
-                        IPAddress(self.last, self._module.version))
+            # IPv4 logic, last address is reserved for broadcast.
+            last_usable_address = self.last - 1
         else:
-            #   IPv6 logic.
-            # RFC 4291 section 2.6.1 says that the first IP in the network is
-            # the Subnet-Router anycast address. This address cannot be
-            # assigned to a host, so use self.first+1.
-            if self.size >= 2:
-                it_hosts = iter_iprange(
-                    IPAddress(self.first + 1, self._module.version),
+            # IPv6 logic, no broadcast address reserved.
+            last_usable_address = self.last
+
+        # If subnet has a size of less than 4, then it is a /31, /32, /127 or /128.
+        # Handle them as per RFC 3021 (IPv4) or RFC 6164 (IPv6), and don't reserve
+        # first or last IP address.
+        if self.size >= 4:
+            it_hosts = iter_iprange(
+                    IPAddress(first_usable_address, self._module.version),
+                    IPAddress(last_usable_address, self._module.version))
+        else:
+            it_hosts = iter_iprange(
+                    IPAddress(self.first, self._module.version),
                     IPAddress(self.last, self._module.version))
+
         return it_hosts
 
     def __str__(self):
@@ -1391,9 +1567,8 @@ class IPRange(BaseIP, IPListMixin):
             boundary of this IP range.
 
         :param flags: (optional) decides which rules are applied to the
-            interpretation of the start and end values. Supported constants
-            are INET_PTON and ZEROFILL. See the netaddr.core docs for further
-            details.
+            interpretation of the start and end values. Refer to the :meth:`IPAddress.__init__`
+            documentation for details.
 
         """
         self._start = IPAddress(start, flags=flags)
@@ -1917,12 +2092,18 @@ def all_matching_cidrs(ip, cidrs):
 #-----------------------------------------------------------------------------
 IPV4_LOOPBACK  = IPNetwork('127.0.0.0/8')    #   Loopback addresses (RFC 990)
 
-IPV4_PRIVATE = (
+IPV4_PRIVATE_USE = [
     IPNetwork('10.0.0.0/8'),        #   Class A private network local communication (RFC 1918)
-    IPNetwork('100.64.0.0/10'),     #   Carrier grade NAT (RFC 6598)
     IPNetwork('172.16.0.0/12'),     #   Private network - local communication (RFC 1918)
+    IPNetwork('192.168.0.0/16'),    #  Class B private network local communication (RFC 1918)
+]
+
+IPV4_PRIVATEISH = tuple(IPV4_PRIVATE_USE) + (
+    IPNetwork('100.64.0.0/10'),     #   Carrier grade NAT (RFC 6598)
     IPNetwork('192.0.0.0/24'),      #   IANA IPv4 Special Purpose Address Registry (RFC 5736)
-    IPNetwork('192.168.0.0/16'),    #   Class B private network local communication (RFC 1918)
+    # protocol assignments
+    
+    # benchmarking
     IPNetwork('198.18.0.0/15'),     #  Testing of inter-network communications between subnets (RFC 2544)
     IPRange('239.0.0.0', '239.255.255.255'),    #   Administrative Multicast
 )
@@ -1946,13 +2127,39 @@ IPV4_RESERVED = (
     IPRange('225.0.0.0', '231.255.255.255'),
 ) + (IPV4_LOOPBACK, IPV4_6TO4)
 
+IPV4_NOT_GLOBALLY_REACHABLE = [
+    IPNetwork(net) for net in [
+        '0.0.0.0/8',
+        '10.0.0.0/8',
+        '100.64.0.0/10',
+        '127.0.0.0/8',
+        '169.254.0.0/16',
+        '172.16.0.0/12',
+        '192.0.0.0/24',
+        '192.0.0.170/31',
+        '192.0.2.0/24',
+        '192.168.0.0/16',
+        '198.18.0.0/15',
+        '198.51.100.0/24',
+        '203.0.113.0/24',
+        '240.0.0.0/4',
+        '255.255.255.255/32',
+    ]
+]
+
+IPV4_NOT_GLOBALLY_REACHABLE_EXCEPTIONS = [
+    IPNetwork(net) for net in ['192.0.0.9/32', '192.0.0.10/32']
+]
+
 #-----------------------------------------------------------------------------
 #   Cached IPv6 address range lookups.
 #-----------------------------------------------------------------------------
-IPV6_LOOPBACK = IPAddress('::1')
+IPV6_LOOPBACK = IPNetwork('::1/128')
 
-IPV6_PRIVATE = (
-    IPNetwork('fc00::/7'),  #   Unique Local Addresses (ULA)
+IPV6_UNIQUE_LOCAL = IPNetwork('fc00::/7')
+
+IPV6_PRIVATEISH = (
+    IPV6_UNIQUE_LOCAL,
     IPNetwork('fec0::/10'), #   Site Local Addresses (deprecated - RFC 3879)
 )
 
@@ -1970,3 +2177,30 @@ IPV6_RESERVED = (
     IPNetwork('E000::/4'), IPNetwork('F000::/5'),
     IPNetwork('F800::/6'), IPNetwork('FE00::/9'),
 )
+
+IPV6_NOT_GLOBALLY_REACHABLE = [
+    IPNetwork(net)
+    for net in [
+        '::1/128',
+        '::/128',
+        '::ffff:0:0/96',
+        '64:ff9b:1::/48',
+        '100::/64',
+        '2001::/23',
+        '2001:db8::/32',
+        '2002::/16',
+        'fc00::/7',
+        'fe80::/10',
+    ]
+]
+
+IPV6_NOT_GLOBALLY_REACHABLE_EXCEPTIONS = [
+    IPNetwork(net)
+    for net in [
+        '2001:1::1/128',
+        '2001:1::2/128',
+        '2001:3::/32',
+        '2001:4:112::/48',
+        '2001:20::/28',
+        '2001:30::/28',
+]    ]

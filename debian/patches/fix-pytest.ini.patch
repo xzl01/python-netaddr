@@ -1,0 +1,10 @@
+Description: Fix pytest.ini
+Author: Thomas Goirand <zigo@debian.org>
+Forwarded: not-needed
+Last-Update: 2024-02-26
+
+--- a/pytest.ini	2024-02-26 09:30:02.988708182 +0100
++++ b/pytest.ini	2024-02-26 09:38:43.060635287 +0100
+@@ -1,2 +1 @@
+ [pytest]
+-addopts = --cov-report term --cov-report html --cov-report xml --cov-report term-missing --cov=netaddr --cov-branch --doctest-modules --doctest-glob="*.rst"

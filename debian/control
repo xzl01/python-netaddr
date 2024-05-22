@@ -1,9 +1,10 @@
 Source: python-netaddr
 Section: python
 Priority: optional
-Maintainer: Vincent Bernat <bernat@debian.org>
+Maintainer: Debian Python Team <team+python@tracker.debian.org>,
 Uploaders:
- Debian Python Team <team+python@tracker.debian.org>,
+ Thomas Goirand <zigo@debian.org>,
+ Vincent Bernat <bernat@debian.org>,
 Standards-Version: 4.1.1
 Build-Depends:
  debhelper-compat (= 13),
@@ -26,10 +27,6 @@ Depends:
 Suggests:
  ipython3,
  python-netaddr-docs,
-Conflicts:
- python-netaddr (<< 0.7.19-4),
-Replaces:
- python-netaddr (<< 0.7.19-4),
 Description: manipulation of various common network address notations (Python 3)
  netaddr is a Python library for the manipulation of various common
  network address notations and representations.

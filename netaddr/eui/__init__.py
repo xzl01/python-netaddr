@@ -13,7 +13,7 @@ from netaddr.strategy import eui48 as _eui48, eui64 as _eui64
 from netaddr.strategy.eui48 import mac_eui48
 from netaddr.strategy.eui64 import eui64_base
 from netaddr.ip import IPAddress
-from netaddr.compat import _importlib_resources, _is_int, _is_str
+from netaddr.compat import _open_binary, _is_int, _is_str
 
 
 class BaseIdentifier(object):
@@ -78,7 +78,7 @@ class OUI(BaseIdentifier):
 
         if isinstance(oui, str):
             #TODO: Improve string parsing here.
-            #TODO: Accept full MAC/EUI-48 addressses as well as XX-XX-XX
+            #TODO: Accept full MAC/EUI-48 addresses as well as XX-XX-XX
             #TODO: and just take /16 (see IAB for details)
             self._value = int(oui.replace('-', ''), 16)
         elif _is_int(oui):
@@ -91,7 +91,7 @@ class OUI(BaseIdentifier):
 
         #   Discover offsets.
         if self._value in ieee.OUI_INDEX:
-            fh = _importlib_resources.open_binary(__package__, 'oui.txt')
+            fh = _open_binary(__package__, 'oui.txt')
             for (offset, size) in ieee.OUI_INDEX[self._value]:
                 fh.seek(offset)
                 data = fh.read(size).decode('UTF-8')
@@ -99,6 +99,9 @@ class OUI(BaseIdentifier):
             fh.close()
         else:
             raise NotRegisteredError('OUI %r not registered!' % (oui,))
+
+    def __hash__(self):
+        return hash(self._value)
 
     def __eq__(self, other):
         if not isinstance(other, OUI):
@@ -258,7 +261,7 @@ class IAB(BaseIdentifier):
 
         #   Discover offsets.
         if self._value in ieee.IAB_INDEX:
-            fh = _importlib_resources.open_binary(__package__, 'iab.txt')
+            fh = _open_binary(__package__, 'iab.txt')
             (offset, size) = ieee.IAB_INDEX[self._value][0]
             self.record['offset'] = offset
             self.record['size'] = size
@@ -353,8 +356,8 @@ class EUI(BaseIdentifier):
             48 or 64. Mainly used to distinguish EUI-48 and EUI-64 identifiers \
             specified as integers which may be numerically equivalent.
 
-        :param dialect: (optional) the mac_* dialect to be used to configure \
-            the formatting of EUI-48 (MAC) addresses.
+        :param dialect: (optional) one of the :ref:`mac_formatting_dialects` to
+            be used to configure the formatting of EUI-48 (MAC) addresses.
         """
         super(EUI, self).__init__()
 
@@ -452,7 +455,7 @@ class EUI(BaseIdentifier):
                     raise AddrFormatError('bad address format: %r' % (value,))
 
     value = property(_get_value, _set_value, None,
-        'a positive integer representing the value of this EUI indentifier.')
+        'a positive integer representing the value of this EUI identifier.')
 
     def _get_dialect(self):
         return self._dialect
@@ -650,7 +653,7 @@ class EUI(BaseIdentifier):
     @property
     def bin(self):
         """
-        The value of this EUI adddress in standard Python binary
+        The value of this EUI address in standard Python binary
         representational form (0bxxx). A back port of the format provided by
         the builtin bin() function found in Python 2.6.x and higher.
         """
@@ -731,8 +734,8 @@ class EUI(BaseIdentifier):
         Format the EUI into the representational format according to the given
         dialect
 
-        :param dialect: the mac_* dialect defining the formatting of EUI-48 \
-            (MAC) addresses.
+        :param dialect: one of the :ref:`mac_formatting_dialects` defining the
+            formatting of EUI-48 (MAC) addresses.
 
         :return: EUI in representational format according to the given dialect
         """

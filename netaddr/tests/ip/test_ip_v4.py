@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from netaddr import IPAddress, IPNetwork, INET_PTON, spanning_cidr, AddrFormatError, ZEROFILL, Z, P, NOHOST
+from netaddr import IPAddress, IPNetwork, INET_ATON, INET_PTON, spanning_cidr, AddrFormatError, ZEROFILL, Z, P, NOHOST
 
 
 def test_ipaddress_v4():
@@ -260,8 +260,6 @@ def test_iterhosts_v4():
         IPAddress('192.168.0.1'),
     ]
 
-    assert list(IPNetwork("1234::/128")) == [IPAddress('1234::')]
-    assert list(IPNetwork("1234::/128").iter_hosts()) == []
     assert list(IPNetwork("192.168.0.0/31").iter_hosts()) == [IPAddress('192.168.0.0'),IPAddress('192.168.0.1')]
     assert list(IPNetwork("192.168.0.0/32").iter_hosts()) == [IPAddress('192.168.0.0')]
 
@@ -347,6 +345,9 @@ def test_ipaddress_inet_aton_constructor_v4():
     assert IPAddress('127.1') == IPAddress('127.0.0.1')
     assert IPAddress('127.0.1') == IPAddress('127.0.0.1')
 
+    # Verify explicit INET_ATON is the same as the current default
+    assert IPAddress('127', flags=INET_ATON) == IPAddress('127')
+
 
 def test_ipaddress_inet_pton_constructor_v4():
     with pytest.raises(AddrFormatError):
@@ -371,6 +372,8 @@ def test_ipaddress_constructor_zero_filled_octets_v4():
     assert IPAddress('010.000.000.001') == IPAddress('8.0.0.1')
     assert IPAddress('010.000.000.001', flags=ZEROFILL) == IPAddress('10.0.0.1')
     assert IPAddress('010.000.001', flags=ZEROFILL) == IPAddress('10.0.0.1')
+    # Verify explicit INET_ATON is the same as the current default
+    assert IPAddress('010.000.000.001', flags=INET_ATON | ZEROFILL) == IPAddress('10.0.0.1')
 
     with pytest.raises(AddrFormatError):
         assert IPAddress('010.000.001', flags=INET_PTON|ZEROFILL)
@@ -433,11 +436,6 @@ def test_ipaddress_oct_format_py2():
 def test_ipaddress_oct_format_py3():
     assert oct(IPAddress(0xffffffff)) == '0o37777777777'
     assert oct(IPAddress(0)) == '0o0'
-
-
-def test_is_multicast():
-    ip = IPAddress('239.192.0.1')
-    assert ip.is_multicast()
 
 
 def test_multicast_info():
@@ -512,10 +510,6 @@ def test_rfc3021_subnets():
     assert IPNetwork('192.0.2.0/32').network == IPAddress('192.0.2.0')
     assert IPNetwork('192.0.2.0/32').broadcast is None
     assert list(IPNetwork('192.0.2.0/32').iter_hosts()) == [IPAddress('192.0.2.0')]
-
-    # IPv6 must not be affected
-    assert IPNetwork('abcd::/127').broadcast is not None
-    assert IPNetwork('abcd::/128').broadcast is not None
 
 
 def test_ipnetwork_change_prefixlen():

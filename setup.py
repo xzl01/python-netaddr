@@ -64,6 +64,9 @@ classifiers = [
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Communications',
     'Topic :: Documentation',
     'Topic :: Education',
@@ -115,6 +118,8 @@ def main():
     setup_options = dict(
         author='David P. D. Moss, Stefan Nordhausen et al',
         author_email='drkjam@gmail.com',
+        maintainer='Jakub Stasiak',
+        maintainer_email='jakub@stasiak.at',
         classifiers=classifiers,
         description='A network address manipulation library for Python',
         download_url='https://pypi.org/project/netaddr/',

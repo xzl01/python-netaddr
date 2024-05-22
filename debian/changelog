@@ -1,5 +1,6 @@
-python-netaddr (0.8.0-3) UNRELEASED; urgency=medium
+python-netaddr (0.10.1-1) unstable; urgency=medium
 
+  [ Debian Janitor ]
   * Update lintian override info format in
     d/python-netaddr-docs.lintian-overrides on line 1.
   * Bump debhelper from deprecated 9 to 13.
@@ -9,7 +10,16 @@ python-netaddr (0.8.0-3) UNRELEASED; urgency=medium
   * Remove constraints unnecessary since buster (oldstable):
     + Build-Depends: Drop versioned constraint on python3-all.
 
- -- Debian Janitor <janitor@jelmer.uk>  Sat, 19 Nov 2022 08:01:02 -0000
+  [ Thomas Goirand ]
+  * Switch debian/watch to mode=git, using github URL.
+  * Add myself as uploader.
+  * New upstream release.
+  * Drop Conflicts+Replaces python-netaddr, as Py2 was removed 2 releases ago.
+  * d/rules: fixed the way to run tests (Closes: #1042169).
+  * Add fix-pytest.ini.patch to fix coverage.
+  * Add autopkgtest.
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 26 Feb 2024 09:30:20 +0100
 
 python-netaddr (0.8.0-2) unstable; urgency=medium
 
